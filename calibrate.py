@@ -26,12 +26,12 @@ def main():
 
 	count = 0
 	for fname in image_names:
-		print 'testing file: ' + fname + ': ' + str(count) + ' of ' + str(len(images))
+		print 'testing file: ' + fname + ': ' + str(count) + ' of ' + str(len(image_names))
 		img = cv2.imread(fname)
 		gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 	    # Find the chess board corners
-		ret, corners = cv2.findChessboardCorners(gray, (7,6),None)
+		ret, corners = cv2.findChessboardCorners(gray, (9,7),None)
 
 	    # If found, add object points, image points (after refining them)
 		if ret == True:
