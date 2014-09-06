@@ -32,6 +32,7 @@ def main():
 		print 'testing file: ' + fname + ': ' + str(count) + ' of ' + str(len(image_names))
 		img = cv2.imread(fname)
 		img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+		(h,w) = img_gray.shape
 
 		ret, corners = cv2.findChessboardCorners(img_gray, pattern_size ,None)
 
@@ -60,6 +61,8 @@ def main():
 
 	cv2.destroyAllWindows()
 
+	#final output
+	print 'final calculated camera matrix:'
 	rms, camera_matrix, dist_coefs, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, (w, h), None, None)
 	print "RMS:", rms
 	print "camera matrix:\n", camera_matrix
