@@ -5,6 +5,8 @@ import cv2
 
 def main():
 	image_names =  sys.argv[1:]
+	pattern_size = (8,6)
+
 	if not image_names:
 		print
 		print 'No calibration images supplied'
@@ -16,41 +18,53 @@ def main():
 	# termination criteria
 	criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-	# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-	objp = np.zeros((6*7,3), np.float32)
-	objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+	# holding the calibration data points as they are collected
+	obj_points = [] # 3d point in real world space
+	img_points = [] # 2d points in image 
 
-	# Arrays to store object points and image points from all the images.
-	objpoints = [] # 3d point in real world space
-	imgpoints = [] # 2d points in image plane.
+	#array of points representing the calibration image location in 3D space
+	#  this is appended to obj_points everytime the grid is located in an image
+	pattern_points = np.zeros( (np.prod(pattern_size), 3), np.float32 )
+	pattern_points[:,:2] = np.indices(pattern_size).T.reshape(-1, 2)
 
 	count = 0
 	for fname in image_names:
 		print 'testing file: ' + fname + ': ' + str(count) + ' of ' + str(len(image_names))
 		img = cv2.imread(fname)
-		gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+		img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
-	    # Find the chess board corners
-		ret, corners = cv2.findChessboardCorners(gray, (9,7),None)
+		ret, corners = cv2.findChessboardCorners(img_gray, pattern_size ,None)
 
-	    # If found, add object points, image points (after refining them)
+		#if board is found
 		if ret == True:
 			print 'Checkerboard found in image: ' + fname
-			objpoints.append(objp)
 
-			corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
-			imgpoints.append(corners2)
+			#refine corners to increase accuracy
+			cv2.cornerSubPix(img_gray,corners,(11,11),(-1,-1),criteria)
 
 	        # Draw and display the corners
-			img = cv2.drawChessboardCorners(img, (7,6), corners2,ret)
-			cv2.imshow('img',img)
-			cv2.waitKey(500)
+			#cv2.drawChessboardCorners(img, pattern_size, corners, ret)
+			#img_small = cv2.resize(img,(800,600), interpolation=cv2.INTER_LINEAR)
+	    
+			#storing grid location data
+			img_points.append(corners.reshape(-1,2))
+			obj_points.append(pattern_points)
+
+			#cv2.namedWindow('img')
+			#cv2.imshow('img',img_small)
+			#cv2.waitKey(500)
 		else:
 			print 'Checkerboard not found in image: ' + fname
 
 		count += 1
 
 	cv2.destroyAllWindows()
+
+	rms, camera_matrix, dist_coefs, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, (w, h), None, None)
+	print "RMS:", rms
+	print "camera matrix:\n", camera_matrix
+	print "distortion coefficients: ", dist_coefs.ravel()
+
 
 if __name__ == '__main__':
 	main()
