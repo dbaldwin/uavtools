@@ -10,14 +10,19 @@ img = cv2.imread(file_name)
 #ret, mtx, dist, rvecs, tvecs
 #current calibration to test
 camera_matrix = np.eye(3)
-camera_matrix[0][0] = 1.76229007e+03
-camera_matrix[1][1] = 1.76399667e+03
-camera_matrix[0][2] = 1.98223642e+03
-camera_matrix[1][2] = 1.48604382e+03
+#camera_matrix[0][0] = 1.76229007e+03
+#camera_matrix[1][1] = 1.76399667e+03
+#camera_matrix[0][2] = 1.98223642e+03
+#camera_matrix[1][2] = 1.48604382e+03
+camera_matrix[0][0] = 1565.96683
+camera_matrix[1][1] = 1568.85212
+camera_matrix[0][2] = 1999.68665
+camera_matrix[1][2] = 1542.11105
+dist_coefs = np.array([ -0.18867 ,  0.03828 ,  -0.00517 ,  -0.00138,  0.00000 ] )
 
 #dist_coefs = np.array([-0.26063938, 0.10406917, -0.00084988, 0,0])
 #dist_coefs = np.array([-0.26063938, 0.10406917, -0.00084988, -0.00046085, 0])
-dist_coefs = np.array([-0.26063938, 0.10406917, -0.00084988, -0.00046085, -0.0251081])
+#dist_coefs = np.array([-0.26063938, 0.10406917, -0.00084988, -0.00046085, -0.0251081])
 
 new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix,dist_coefs,(w,h),1,(w,h))
 
