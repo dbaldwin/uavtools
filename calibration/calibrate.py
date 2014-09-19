@@ -58,7 +58,7 @@ def calibrate(image_names, pattern_size=(8,6), debug=False, calibration_file_nam
 				print 'distortion coefficients: ', dist_coefs.ravel()
 
 				sp = os.path.split(fname)
-				debug_fname = sp[0] + '\debug_out_' + sp[1]
+				debug_fname = os.path.join(sp[0],'debug_img_' + sp[1])
 				print 'writing debug image to: ' + debug_fname
 				cv2.drawChessboardCorners(img, pattern_size, corners, ret)
 				cv2.imwrite(debug_fname, img)
