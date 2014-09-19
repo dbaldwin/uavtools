@@ -1,11 +1,12 @@
 import sys
+import os
 
 import numpy as np
 import cv2
 
-def main():
-	image_names =  sys.argv[1:]
-	pattern_size = (8,6)
+from calibration.utils import write_calibration_file
+
+def calibrate(image_names, pattern_size=(8,6), debug=False, calibration_file_name='default_calibration.json'):
 
 	if not image_names:
 		print
@@ -43,32 +44,40 @@ def main():
 			#refine corners to increase accuracy
 			cv2.cornerSubPix(img_gray,corners,(11,11),(-1,-1),criteria)
 
-	        # Draw and display the corners
-			#cv2.drawChessboardCorners(img, pattern_size, corners, ret)
-			#img_small = cv2.resize(img,(800,600), interpolation=cv2.INTER_LINEAR)
-	    
 			#storing grid location data
 			img_points.append(corners.reshape(-1,2))
 			obj_points.append(pattern_points)
 
-			#cv2.namedWindow('img')
-			#cv2.imshow('img',img_small)
-			#cv2.waitKey(500)
+			print debug
+
+			if debug:
+				rms, camera_matrix, dist_coefs, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, (w, h), None, None)
+				print 'intermediate results:'
+				print 'RMS:', rms
+				print 'camera matrix:\n', camera_matrix
+				print 'distortion coefficients: ', dist_coefs.ravel()
+
+				sp = os.path.split(fname)
+				debug_fname = sp[0] + '\debug_out_' + sp[1]
+				print 'writing debug image to: ' + debug_fname
+				cv2.drawChessboardCorners(img, pattern_size, corners, ret)
+				cv2.imwrite(debug_fname, img)
 		else:
 			print 'Checkerboard not found in image: ' + fname
 
 		count += 1
 
-	cv2.destroyAllWindows()
-
 	#final output
 	print 'final calculated camera matrix:'
 	rms, camera_matrix, dist_coefs, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, (w, h), None, None)
-	print "RMS:", rms
-	print "camera matrix:\n", camera_matrix
-	print "distortion coefficients: ", dist_coefs.ravel()
+	print 'RMS:', rms
+	print 'camera matrix:\n', camera_matrix
+	print 'distortion coefficients: ', dist_coefs.ravel()
+
+	print 'writing to file: ' + calibration_file_name
+	write_calibration_file(camera_matrix,dist_coefs,calibration_file_name)
 
 
 if __name__ == '__main__':
-	main()
+	calibrate(image_names=sys.argv[1:],debug=True)
 
