@@ -1,41 +1,35 @@
 
 import sys
+import os
+
 import numpy as np
 import cv2
 
-file_name = sys.argv[1] or file_name
-img = cv2.imread(file_name)
-(h,w) = img.shape[:2]
+from calibration.utils import read_calibration_file
 
-#ret, mtx, dist, rvecs, tvecs
-#current calibration to test
-camera_matrix = np.eye(3)
-#camera_matrix[0][0] = 1.76229007e+03
-#camera_matrix[1][1] = 1.76399667e+03
-#camera_matrix[0][2] = 1.98223642e+03
-#camera_matrix[1][2] = 1.48604382e+03
-camera_matrix[0][0] = 1565.96683
-camera_matrix[1][1] = 1568.85212
-camera_matrix[0][2] = 1999.68665
-camera_matrix[1][2] = 1542.11105
-dist_coefs = np.array([ -0.18867 ,  0.03828 ,  -0.00517 ,  -0.00138,  0.00000 ] )
+def undistort_image(fname, camera_matrix, dist_coefs, fname_out='', crop=False):
+	if not fname_out:
+		sp = os.path.split(fname)
+		fname_out = os.path.join(sp[0],'undistorted_'+sp[1])
 
-#dist_coefs = np.array([-0.26063938, 0.10406917, -0.00084988, 0,0])
-#dist_coefs = np.array([-0.26063938, 0.10406917, -0.00084988, -0.00046085, 0])
-#dist_coefs = np.array([-0.26063938, 0.10406917, -0.00084988, -0.00046085, -0.0251081])
+	img = cv2.imread(fname)	
+	(h,w) = img.shape[:2]
 
-new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix,dist_coefs,(w,h),1,(w,h))
+	new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix,dist_coefs,(w,h),1,(w,h))
+	
+	dst = cv2.undistort(img, camera_matrix, dist_coefs, None, new_camera_matrix)
+	if crop:# crop the image
+		x,y,w,h = roi
+		dst = dst[y:y+h, x:x+w]
+
+	cv2.imwrite(fname_out,dst)
 
 
+if __name__ == '__main__':
+	cal_fname = sys.argv[1]
+	img_fname = sys.argv[2]
+	camera_matrix, dist_coefs = read_calibration_file(cal_fname)
 
-#undistort
-# undistort
-dst = cv2.undistort(img, camera_matrix, dist_coefs, None, new_camera_matrix)
-cv2.imwrite('calibresultfull.png',dst)
-
-# crop the image
-x,y,w,h = roi
-dst = dst[y:y+h, x:x+w]
-cv2.imwrite('calibresult.png',dst)
+	undistort_image(img_fname,camera_matrix,dist_coefs)
 
 
